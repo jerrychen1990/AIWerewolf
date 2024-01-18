@@ -16,9 +16,13 @@ if __name__ == "__main__":
     players = [RandomWerewolfAgent(name=f"p{idx+1}") for idx in range(6)]
     game = WerewolfGame(players=players)
     
+    names = ["张伟","王伟","李伟","王丽","李静","李娜"]
     
-    players = [LLMWerewolfAgent(name=f"p{idx+1}", model="chatglm_6b", prompt_file_path="config/simple_prompt.json") for idx in range(4)]
-    roles = [Role.VILLAGER, Role.WEREWOLF, Role.WEREWOLF, Role.VILLAGER]
+    roles = [Role.WEREWOLF, Role.WEREWOLF, Role.VILLAGER, Role.VILLAGER, Role.VILLAGER]
+
+    model = "glm-4"
+    
+    players = [LLMWerewolfAgent(name=name, model=model) for name in names[:len(roles)]]
     game = WerewolfGame(players=players, roles=roles)
     
     winner = game.run()
