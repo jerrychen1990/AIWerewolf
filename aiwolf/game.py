@@ -97,21 +97,21 @@ class WerewolfGame(IGame):
             for player in self.alive_players:
                 if player.role == Role.WEREWOLF:
                     to_kill = player.kill()
+                    to_kill = name2player[to_kill]
                     logger.info(f"{player} 选择杀死 {to_kill}")
                     kill_dict[to_kill] += 1
                     
             kill_items = sorted(kill_dict.items(), key=lambda x:x[1], reverse=True)    
-            logger.debug(f"{kill_items=}")
-            for name, num in kill_items:
-                if name in set(name2player):
-                    p = name2player[name]
-                    logger.info(f"{p}被杀死")
-                    if p in self.alive_players:                    
-                        self.alive_players.remove(name2player[name])    
-                        action = Action(agent_name=name, data=dict(), action_type=ActionType.KILLED)
-                        self._broadcast_action(action=action)
-                        break
-            logger.debug(f"剩余玩家: {self.alive_players}")
+            logger.info(f"狼人杀人列表: {kill_items}")
+            max_kill = max(kill_dict.values())
+            max_kills = [k for k,v in kill_dict.items() if v == max_kill]
+            kill = random.choice(max_kills)    
+            logger.info(f"{kill} 被杀死")               
+            self.alive_players.remove(kill)    
+            action = Action(agent_name=kill.name, data=dict(), action_type=ActionType.KILLED)
+            self._broadcast_action(action=action)
+            logger.info(f"剩余玩家: {self.alive_players}")
+            
             winner =  self.is_over()
             if winner:
                 logger.info(f"游戏结束，赢家:{winner}")
@@ -122,7 +122,8 @@ class WerewolfGame(IGame):
             logger.info(f"**************************** 发言阶段 ****************************")
             for player in self.alive_players:
                 message = player.speak()
-                logger.info(f"{player}发言:{message}")
+                logger.info(f"{player}发言: {message}\n")
+                
                 action = Action(agent_name=player.name, data=dict(message=message), action_type=ActionType.SPEAK)
                 self._broadcast_action(action=action)
                 
@@ -131,24 +132,22 @@ class WerewolfGame(IGame):
             vote_dict = defaultdict(int)
             for player in self.alive_players:
                 to_vote = player.vote()
-                logger.info(f"{player}投票给:{to_vote}")
+                to_vote = name2player[to_vote]
+                logger.info(f"{player} 投票给 {to_vote}")
                 vote_dict[to_vote] += 1
                 action = Action(agent_name=player.name, data=dict(to_vote=to_vote), action_type=ActionType.VOTE)
                 self._broadcast_action(action=action)
 
             vote_items = sorted(vote_dict.items(),key=lambda x:x[1], reverse=True)
-            logger.debug(f"{vote_items=}")  
-            for name, num in vote_items:
-                if name in set(name2player):
-                    p = name2player[name]
-                    if p in self.alive_players:
-                        logger.info(f"{p}被处决")
-                        self.alive_players.remove(p)    
-                        action = Action(agent_name=name, data=dict(), action_type=ActionType.EXECUTED)
-                        self._broadcast_action(action=action)
-                        break
-            logger.debug(f"剩余玩家: {self.alive_players}")
-
+            logger.info(f"得票列表: {vote_items}")
+            max_vote = max(e[1] for e in vote_items)
+            max_voted = [p for p, v in vote_items if v == max_vote]
+            voted = random.choice(max_voted)  
+            logger.info(f"{voted}被处决")
+            self.alive_players.remove(voted)    
+            action = Action(agent_name=voted.name, data=dict(), action_type=ActionType.EXECUTED)
+            self._broadcast_action(action=action)
+            logger.info(f"剩余玩家: {self.alive_players}")
             self._broadcast_info(alive_player_names = [e.name for e in self.alive_players])
 
             _round += 1

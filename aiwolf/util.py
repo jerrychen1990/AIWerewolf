@@ -15,7 +15,7 @@ LOG_DIR = os.path.join(BASE_DIR, "logs")
 
 def get_log(name: str):
     logger_level = logging.DEBUG
-    fmt_type = "detail"
-
-    logger = getlog_detail(name=name, format_type=fmt_type, level=logger_level, do_file=True, log_dir=LOG_DIR)
+    logger = getlog_detail(name=name, format_type="detail",
+                           level=logger_level, do_print=True, print_format_type="raw", print_level=logging.INFO,
+                           do_file=True, log_dir=LOG_DIR)
     return logger

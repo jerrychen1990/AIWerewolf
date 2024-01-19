@@ -21,6 +21,8 @@ if __name__ == "__main__":
     roles = [Role.WEREWOLF, Role.WEREWOLF, Role.VILLAGER, Role.VILLAGER, Role.VILLAGER]
 
     model = "glm-4"
+    model = "glm-3-turbo"
+
     
     players = [LLMWerewolfAgent(name=name, model=model) for name in names[:len(roles)]]
     game = WerewolfGame(players=players, roles=roles)

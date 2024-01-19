@@ -8,11 +8,9 @@
 
 
 import random
-from tabnanny import verbose
 from typing import List
 from aiwolf.core import Role, Action
 from aiwolf.util import get_log
-from snippets.logs import getlog
 import config.simple_prompt as prompts
 from agit.backend import call_llm_api
 
@@ -114,16 +112,13 @@ def extract_name(message: str, pattern: str):
         return item.strip()
     return message
 
-import logging
-# verbose = logging.INFO
-# the_logger = logging.getLogger("agit")
-the_logger = logger
-
 class LLMWerewolfAgent(IWerewolfAgent):
     def __init__(self, model: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model = model
         self.memory["actions"]:List[Action] = []
+        self.logger = get_log(name=f"LLM_{self.name}")
+        
 
     def _build_information(self):
         info = f"你的名字是{self.name}, 你的身份是:{self.role.value}, 你的阵营是{'狼人' if self.role==Role.WEREWOLF else '好人'}"
@@ -145,13 +140,13 @@ class LLMWerewolfAgent(IWerewolfAgent):
 
     def speak(self) -> str:
         prompt = prompts.speak
-        message = call_llm_api(model=self.model, prompt=prompt, system=self._build_system(), stream=False, logger=the_logger)
+        message = call_llm_api(model=self.model, prompt=prompt, system=self._build_system(), stream=False, logger=self.logger)
         return message
 
     def vote(self) -> str:
         prompt = prompts.vote.format(names=[e for e in self.env_info["alive_player_names"] if e!=self.name])
-        message = call_llm_api(model=self.model, prompt=prompt, system=self._build_system(), stream=False, logger=the_logger)
-        logger.debug(f"vote message:[{message}]")
+        message = call_llm_api(model=self.model, prompt=prompt, system=self._build_system(), stream=False, logger=self.logger)
+        self.logger.debug(f"vote message:[{message}]")
 
         vote = extract_name(message, prompts.vote_pattern)
         vote = self._assert_in_names(vote)
@@ -161,8 +156,8 @@ class LLMWerewolfAgent(IWerewolfAgent):
     def kill(self) -> str:
         super().kill()
         prompt = prompts.kill.format(names=self.env_info["alive_player_names"])
-        message = call_llm_api(model=self.model, prompt=prompt, system=self._build_system(), stream=False, logger=the_logger)
-        logger.debug(f"kill message:[{message}]")
+        message = call_llm_api(model=self.model, prompt=prompt, system=self._build_system(), stream=False, logger=self.logger)
+        self.logger.debug(f"kill message:[{message}]")
         to_kill = extract_name(message, prompts.kill_pattern)
         to_kill = self._assert_in_names(to_kill)
         # logger.info(f"{self} choose to kill {to_kill}")
